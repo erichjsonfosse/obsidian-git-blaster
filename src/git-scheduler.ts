@@ -44,7 +44,7 @@ export class GitScheduler {
   }
 
   triggerFileChangeEvent() {
-    if (this.settings.triggerMode !== 'filechange' && this.settings.triggerMode !== 'both') {
+    if (this.settings.triggerMode !== 'file-change' && this.settings.triggerMode !== 'both') {
       return;
     }
 

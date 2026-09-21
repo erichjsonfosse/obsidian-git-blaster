@@ -21,7 +21,7 @@ export class GitBlasterSettingTab extends PluginSettingTab {
       .addDropdown(cb => {
         cb.addOption('both', 'Interval & File Changes')
           .addOption('interval', 'Intervals Only')
-          .addOption('filechange', 'File Changes Only')
+          .addOption('file-change', 'File Changes Only')
           .addOption('manual', 'Manual Syncs Only')
           .setValue(this.plugin.settings.triggerMode)
           .onChange(async (val: any) => {
@@ -49,7 +49,7 @@ export class GitBlasterSettingTab extends PluginSettingTab {
         });
     }
 
-    if (this.plugin.settings.triggerMode === 'filechange' || this.plugin.settings.triggerMode === 'both') {
+    if (this.plugin.settings.triggerMode === 'file-change' || this.plugin.settings.triggerMode === 'both') {
       new Setting(containerEl)
         .setName('File Change Debounce (seconds)')
         .setDesc('Wait duration after typing/modifications stop before initiating a backup.')

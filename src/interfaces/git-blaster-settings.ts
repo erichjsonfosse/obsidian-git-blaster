@@ -1,5 +1,5 @@
 export interface GitBlasterSettings {
-  triggerMode: 'interval' | 'filechange' | 'both' | 'manual';
+  triggerMode: 'interval' | 'file-change' | 'both' | 'manual';
   intervalSeconds: number;
   debounceSeconds: number;
   pullBeforeSync: boolean;

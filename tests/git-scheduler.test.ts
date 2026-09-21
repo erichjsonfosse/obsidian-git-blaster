@@ -62,7 +62,7 @@ async function runTests() {
     let triggerCount = 0;
     const getCount = () => triggerCount;
 
-    const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'filechange' }, async () => {
+    const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'file-change' }, async () => {
       triggerCount++;
     });
 
