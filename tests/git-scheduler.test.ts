@@ -1,6 +1,6 @@
 import { GitScheduler } from '../src/git-scheduler';
 import { GitManager } from '../src/git-manager';
-import { GitBlasterSettings } from '../src/constants';
+import { GitBlasterSettings } from '../src/interfaces/git-blaster-settings';
 
 // A mock GitManager for testing
 class MockGitManager extends GitManager {

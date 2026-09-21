@@ -1,5 +1,4 @@
 import type { GitBlasterSettings } from './interfaces/git-blaster-settings';
-export type { GitBlasterSettings };
 
 export const DEFAULT_SETTINGS: GitBlasterSettings = {
   triggerMode: 'both',
