@@ -1,6 +1,5 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
-const path = require('path');
 
 let success = true;
 
@@ -13,12 +12,9 @@ try {
 }
 
 if (success) {
-  console.log('Running test suite...');
+  console.log('Running test suite with Node\'s native test runner...\n');
   try {
-    console.log('\n--- Running GitManager Tests ---');
-    execSync('node dist-test/tests/git-manager.test.js', { stdio: 'inherit' });
-    console.log('\n--- Running GitScheduler Tests ---');
-    execSync('node dist-test/tests/git-scheduler.test.js', { stdio: 'inherit' });
+    execSync('node --test dist-test/tests/git-manager.test.js dist-test/tests/git-scheduler.test.js', { stdio: 'inherit' });
     console.log('\nAll tests passed! ✅');
   } catch (err) {
     console.error('\nSome tests failed! ❌');

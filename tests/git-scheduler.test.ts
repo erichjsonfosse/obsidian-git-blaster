@@ -1,3 +1,5 @@
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import assert from 'node:assert/strict';
 import { GitScheduler } from '../src/git-scheduler';
 import { GitManager } from '../src/git-manager';
 import { GitBlasterSettings } from '../src/interfaces/git-blaster-settings';
@@ -9,10 +11,7 @@ class MockGitManager extends GitManager {
   }
 }
 
-async function runTests() {
-  console.log('Running GitScheduler tests...');
-
-  // Mock settings
+describe('GitScheduler', () => {
   const settings: GitBlasterSettings = {
     triggerMode: 'both',
     intervalSeconds: 0.05, // 50ms for fast testing
@@ -25,12 +24,8 @@ async function runTests() {
 
   const mockGitManager = new MockGitManager();
 
-  // Test 1: Interval Timer Triggering
-  {
-    console.log('Test 1: Interval Timer triggers sync');
+  it('triggers sync via interval timer', async () => {
     let triggerCount = 0;
-    const getCount = () => triggerCount;
-
     const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'interval' }, async () => {
       triggerCount++;
     });
@@ -41,27 +36,19 @@ async function runTests() {
     await new Promise(resolve => setTimeout(resolve, 120));
 
     scheduler.stopIntervalTimer();
-    const countAfterStop = getCount();
+    const countAfterStop = triggerCount;
 
-    if (countAfterStop === 0) {
-      throw new Error(`Expected interval timer to trigger sync, but triggerCount was 0`);
-    }
+    assert.ok(countAfterStop > 0, 'Expected interval timer to trigger sync at least once');
 
     // Wait another 100ms and verify no more triggers
     await new Promise(resolve => setTimeout(resolve, 100));
-    if (getCount() !== countAfterStop) {
-      throw new Error(`Expected interval timer to be stopped, but triggerCount increased from ${countAfterStop} to ${getCount()}`);
-    }
+    assert.strictEqual(triggerCount, countAfterStop, 'Expected interval timer to stop triggering sync after stopping');
 
     scheduler.cleanup();
-  }
+  });
 
-  // Test 2: File Change Debouncing
-  {
-    console.log('Test 2: File Change debounces sync');
+  it('debounces file change events', async () => {
     let triggerCount = 0;
-    const getCount = () => triggerCount;
-
     const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'file-change' }, async () => {
       triggerCount++;
     });
@@ -72,26 +59,18 @@ async function runTests() {
     scheduler.triggerFileChangeEvent();
 
     // Verify it hasn't triggered immediately
-    if (getCount() !== 0) {
-      throw new Error(`Expected 0 triggers immediately after calling triggerFileChangeEvent, but got ${getCount()}`);
-    }
+    assert.strictEqual(triggerCount, 0, 'Expected 0 triggers immediately after calling triggerFileChangeEvent');
 
     // Wait 80ms (slightly more than 50ms debounce)
     await new Promise(resolve => setTimeout(resolve, 80));
 
-    if (getCount() !== 1) {
-      throw new Error(`Expected exactly 1 trigger after debounce period, but got ${getCount()}`);
-    }
+    assert.strictEqual(triggerCount, 1, 'Expected exactly 1 trigger after debounce period');
 
     scheduler.cleanup();
-  }
+  });
 
-  // Test 3: Setting updates change behavior
-  {
-    console.log('Test 3: Update settings dynamically restarts / disables triggers');
+  it('restarts or disables triggers when settings are dynamically updated', async () => {
     let triggerCount = 0;
-    const getCount = () => triggerCount;
-
     const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'interval' }, async () => {
       triggerCount++;
     });
@@ -100,32 +79,21 @@ async function runTests() {
 
     // Wait 70ms (should trigger 1 time)
     await new Promise(resolve => setTimeout(resolve, 70));
-    if (getCount() === 0) {
-      throw new Error(`Expected at least 1 trigger`);
-    }
+    assert.ok(triggerCount > 0, 'Expected at least 1 trigger initially');
 
-    const firstPeriodCount = getCount();
+    const firstPeriodCount = triggerCount;
 
     // Change triggerMode to manual (which disables interval)
     scheduler.updateSettings({
       ...settings,
-      triggerMode: 'manual'
+      triggerMode: 'manual',
     });
 
     // Wait another 100ms
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    if (getCount() !== firstPeriodCount) {
-      throw new Error(`Expected interval timer to stop after changing triggerMode to manual, but triggerCount increased from ${firstPeriodCount} to ${getCount()}`);
-    }
+    assert.strictEqual(triggerCount, firstPeriodCount, 'Expected interval timer to stop after changing triggerMode to manual');
 
     scheduler.cleanup();
-  }
-
-  console.log('GitScheduler tests PASS! 🎉');
-}
-
-runTests().catch(err => {
-  console.error('GitScheduler test failed with error:', err);
-  process.exit(1);
+  });
 });
