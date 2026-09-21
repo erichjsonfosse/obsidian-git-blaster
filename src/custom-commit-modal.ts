@@ -2,8 +2,8 @@ import { Modal, TextComponent, ButtonComponent, Notice } from 'obsidian';
 import GitBlasterPlugin from './main';
 
 export class CustomCommitModal extends Modal {
-  onSubmit: (customMessage: string) => void;
-  plugin: GitBlasterPlugin;
+  readonly onSubmit: (customMessage: string) => void;
+  readonly plugin: GitBlasterPlugin;
 
   constructor(plugin: GitBlasterPlugin, onSubmit: (customMessage: string) => void) {
     super(plugin.app);

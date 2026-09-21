@@ -1,16 +1,17 @@
 import { Plugin, Notice } from 'obsidian';
 import { GitManager } from './git-manager';
 import { GitScheduler } from './git-scheduler';
-import { GitBlasterSettings, DEFAULT_SETTINGS } from './constants';
+import { GitBlasterSettings } from './interfaces/git-blaster-settings';
+import { DEFAULT_SETTINGS } from './constants';
 import { GitBlasterSettingTab } from './settings-tab';
 import { CustomCommitModal } from './custom-commit-modal';
 import * as os from 'os';
 
 export default class GitBlasterPlugin extends Plugin {
-  settings: GitBlasterSettings;
-  gitManager: GitManager;
-  scheduler: GitScheduler;
-  statusBarItem: HTMLElement;
+  declare settings: GitBlasterSettings;
+  readonly gitManager: GitManager;
+  readonly scheduler: GitScheduler;
+  readonly statusBarItem: HTMLElement;
 
   async onload() {
     console.log('Git Blaster loading...');
@@ -19,14 +20,14 @@ export default class GitBlasterPlugin extends Plugin {
     const adapter = this.app.vault.adapter as any;
     const vaultPath = adapter.basePath;
 
-    this.gitManager = new GitManager(vaultPath);
-    this.scheduler = new GitScheduler(
+    (this as any).gitManager = new GitManager(vaultPath);
+    (this as any).scheduler = new GitScheduler(
       this.gitManager,
       this.settings,
       (msg) => this.runSyncPipeline(msg)
     );
 
-    this.statusBarItem = this.addStatusBarItem();
+    (this as any).statusBarItem = this.addStatusBarItem();
     this.updateStatusBar('idle');
 
     this.addSettingTab(new GitBlasterSettingTab(this.app, this));

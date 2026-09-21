@@ -2,7 +2,7 @@
   "name": "obsidian-git-blaster",
   "version": "1.0.0",
   "description": "Blazing-fast, lightweight automated git backup and sync utility.",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs dev",
     "build": "node esbuild.config.mjs build",

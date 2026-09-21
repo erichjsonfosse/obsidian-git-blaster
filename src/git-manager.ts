@@ -1,7 +1,7 @@
 import { execFile } from 'child_process';
 
 export class GitManager {
-  private vaultPath: string;
+  private readonly vaultPath: string;
 
   constructor(vaultPath: string) {
     this.vaultPath = vaultPath;

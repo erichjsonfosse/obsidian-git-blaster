@@ -1,10 +1,10 @@
 import { GitManager } from './git-manager';
-import { GitBlasterSettings } from './constants';
+import { GitBlasterSettings } from './interfaces/git-blaster-settings';
 
 export class GitScheduler {
-  private gitManager: GitManager;
+  private readonly gitManager: GitManager;
   private settings: GitBlasterSettings;
-  private onSyncTrigger: (customMessage?: string) => Promise<void>;
+  private readonly onSyncTrigger: (customMessage?: string) => Promise<void>;
 
   private intervalId: NodeJS.Timeout | null = null;
   private debounceId: NodeJS.Timeout | null = null;

@@ -1,12 +1,5 @@
-export interface GitBlasterSettings {
-  triggerMode: 'interval' | 'filechange' | 'both' | 'manual';
-  intervalSeconds: number;
-  debounceSeconds: number;
-  pullBeforeSync: boolean;
-  commitMessageTemplate: string;
-  remoteName: string;
-  branchName: string;
-}
+import type { GitBlasterSettings } from './interfaces/git-blaster-settings';
+export type { GitBlasterSettings };
 
 export const DEFAULT_SETTINGS: GitBlasterSettings = {
   triggerMode: 'both',

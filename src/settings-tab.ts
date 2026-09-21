@@ -2,7 +2,7 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import GitBlasterPlugin from './main';
 
 export class GitBlasterSettingTab extends PluginSettingTab {
-  plugin: GitBlasterPlugin;
+  readonly plugin: GitBlasterPlugin;
 
   constructor(app: App, plugin: GitBlasterPlugin) {
     super(app, plugin);
