@@ -14,7 +14,9 @@
     "backup",
     "autosave"
   ],
-  "author": "Erich Json Fosse",
+  "author": {
+    "name": "Erich Json Fosse"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^16.11.7",
