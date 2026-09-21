@@ -15,10 +15,13 @@ try {
 if (success) {
   console.log('Running test suite...');
   try {
+    console.log('\n--- Running GitManager Tests ---');
     execSync('node dist-test/tests/git-manager.test.js', { stdio: 'inherit' });
-    console.log('All tests passed! ✅');
+    console.log('\n--- Running GitScheduler Tests ---');
+    execSync('node dist-test/tests/git-scheduler.test.js', { stdio: 'inherit' });
+    console.log('\nAll tests passed! ✅');
   } catch (err) {
-    console.error('Some tests failed! ❌');
+    console.error('\nSome tests failed! ❌');
     success = false;
   }
 }
