@@ -110,9 +110,9 @@ export default class GitBlasterPlugin extends Plugin {
     const hostname = os.hostname() || 'local';
 
     return template
-      .replace('{{datetime}}', datetime)
-      .replace('{{num_files}}', String(filesCount))
-      .replace('{{hostname}}', hostname);
+      .replace(/{{datetime}}/g, datetime)
+      .replace(/{{num_files}}/g, String(filesCount))
+      .replace(/{{hostname}}/g, hostname);
   }
 
   async runSyncPipeline(customMsg?: string): Promise<void> {
@@ -120,9 +120,17 @@ export default class GitBlasterPlugin extends Plugin {
 
     try {
       const hasModified = await this.gitManager.hasChanges();
+
+      if (hasModified) {
+        console.log('Git Blaster: Committing changes...');
+        const numFiles = await this.gitManager.getModifiedFilesCount();
+        const commitMsg = customMsg || this.formatCommitMessage(this.settings.commitMessageTemplate, numFiles);
+        await this.gitManager.commit(commitMsg);
+      }
+
       const unpushed = await this.gitManager.hasUnpushedCommits(this.settings.remoteName, this.settings.branchName);
 
-      if (!hasModified && !unpushed) {
+      if (!unpushed) {
         console.log('Git Blaster: Vault up-to-date. Sync aborted.');
         this.updateStatusBar('synced');
         return;
@@ -134,19 +142,13 @@ export default class GitBlasterPlugin extends Plugin {
         
         if (!pullResult.success) {
           if (pullResult.conflict) {
-            new Notice('Git Blaster: Merge conflict detected! Resolving aborted. Please fix manually.');
+            new Notice('Git Blaster: Merge conflict detected! Aborting rebase. Please fix manually.');
+            await this.gitManager.abortRebase();
             this.updateStatusBar('conflict');
             return;
           }
           console.warn('Git Blaster: Pull failed', pullResult.error);
         }
-      }
-
-      if (hasModified) {
-        console.log('Git Blaster: Committing changes...');
-        const numFiles = await this.gitManager.getModifiedFilesCount();
-        const commitMsg = customMsg || this.formatCommitMessage(this.settings.commitMessageTemplate, numFiles);
-        await this.gitManager.commit(commitMsg);
       }
 
       console.log('Git Blaster: Pushing changes...');
@@ -174,15 +176,27 @@ export default class GitBlasterPlugin extends Plugin {
   private runFinalShutdownSync() {
     const adapter = this.app.vault.adapter as any;
     const vaultPath = adapter.basePath;
-    const { execSync } = require('child_process');
+    const { execFileSync } = require('child_process');
 
     try {
-      const checkStatus = execSync('git status --porcelain', { cwd: vaultPath }).toString();
-      if (checkStatus.trim().length > 0) {
-        execSync('git add .', { cwd: vaultPath });
-        const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        execSync(`git commit -m "Vault backup on close: ${nowStr}"`, { cwd: vaultPath });
-        execSync(`git push ${this.settings.remoteName} ${this.settings.branchName}`, { cwd: vaultPath });
+      const checkStatus = execFileSync('git', ['status', '--porcelain'], { cwd: vaultPath, timeout: 10000 }).toString();
+      const hasModified = checkStatus.trim().length > 0;
+
+      let hasUnpushed = false;
+      try {
+        const checkUnpushed = execFileSync('git', ['log', `${this.settings.remoteName}/${this.settings.branchName}..HEAD`, '--oneline'], { cwd: vaultPath, timeout: 10000 }).toString();
+        hasUnpushed = checkUnpushed.trim().length > 0;
+      } catch (e) {
+        hasUnpushed = true;
+      }
+
+      if (hasModified || hasUnpushed) {
+        if (hasModified) {
+          execFileSync('git', ['add', '.'], { cwd: vaultPath, timeout: 10000 });
+          const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          execFileSync('git', ['commit', '-m', `Vault backup on close: ${nowStr}`], { cwd: vaultPath, timeout: 10000 });
+        }
+        execFileSync('git', ['push', this.settings.remoteName, this.settings.branchName], { cwd: vaultPath, timeout: 10000 });
         console.log('Git Blaster: Sync on exit completed.');
       }
     } catch (e) {
