@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-git-blaster",
+  "name": "Git Blaster",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "Blazing-fast, lightweight automated git backup and sync utility.",
+  "author": "Erich Json Fosse",
+  "authorUrl": "https://github.com/erichjsonfosse",
+  "isDesktopOnly": true
+}
