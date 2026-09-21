@@ -1,3 +1,192 @@
-console.log("Git Blaster Active");
+import { Plugin, Notice } from 'obsidian';
+import { GitManager } from './git-manager';
+import { GitScheduler } from './git-scheduler';
+import { GitBlasterSettings, DEFAULT_SETTINGS } from './constants';
+import { GitBlasterSettingTab } from './settings-tab';
+import { CustomCommitModal } from './custom-commit-modal';
+import * as os from 'os';
 
-export {};
+export default class GitBlasterPlugin extends Plugin {
+  settings: GitBlasterSettings;
+  gitManager: GitManager;
+  scheduler: GitScheduler;
+  statusBarItem: HTMLElement;
+
+  async onload() {
+    console.log('Git Blaster loading...');
+    await this.loadSettings();
+
+    const adapter = this.app.vault.adapter as any;
+    const vaultPath = adapter.basePath;
+
+    this.gitManager = new GitManager(vaultPath);
+    this.scheduler = new GitScheduler(
+      this.gitManager,
+      this.settings,
+      (msg) => this.runSyncPipeline(msg)
+    );
+
+    this.statusBarItem = this.addStatusBarItem();
+    this.updateStatusBar('idle');
+
+    this.addSettingTab(new GitBlasterSettingTab(this.app, this));
+
+    this.registerEvent(
+      this.app.vault.on('modify', () => this.scheduler.triggerFileChangeEvent())
+    );
+    this.registerEvent(
+      this.app.vault.on('create', () => this.scheduler.triggerFileChangeEvent())
+    );
+    this.registerEvent(
+      this.app.vault.on('delete', () => this.scheduler.triggerFileChangeEvent())
+    );
+    this.registerEvent(
+      this.app.vault.on('rename', () => this.scheduler.triggerFileChangeEvent())
+    );
+
+    this.scheduler.startIntervalTimer();
+    this.scheduler.registerOnlineListener();
+
+    this.addRibbonIcon('git-compare_arrows', 'Git Blaster: Sync now', () => {
+      new Notice('Git Blaster: Manual Sync Initiated');
+      this.runSyncPipeline();
+    });
+
+    this.addCommand({
+      id: 'git-blaster-sync-now',
+      name: 'Sync Vault Now (Silent)',
+      callback: () => this.runSyncPipeline()
+    });
+
+    this.addCommand({
+      id: 'git-blaster-custom-commit',
+      name: 'Commit and Push with Custom Message...',
+      callback: () => {
+        new CustomCommitModal(this, (customMessage) => {
+          this.runSyncPipeline(customMessage);
+        }).open();
+      }
+    });
+  }
+
+  onunload() {
+    console.log('Git Blaster unloading...');
+    this.scheduler.cleanup();
+    this.runFinalShutdownSync();
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+
+  updateStatusBar(state: 'idle' | 'syncing' | 'synced' | 'offline' | 'conflict') {
+    let icon = '💤';
+    let text = 'Git: Idle';
+
+    if (state === 'syncing') {
+      icon = '🔄';
+      text = 'Git: Syncing...';
+    } else if (state === 'synced') {
+      icon = '✅';
+      text = 'Git: Synced';
+    } else if (state === 'offline') {
+      icon = '⚠️';
+      text = 'Git: Push pending';
+    } else if (state === 'conflict') {
+      icon = '❌';
+      text = 'Git: Conflict!';
+    }
+
+    this.statusBarItem.setText(`${icon} ${text}`);
+  }
+
+  private formatCommitMessage(template: string, filesCount: number): string {
+    const now = new Date();
+    const datetime = now.toISOString().replace('T', ' ').substring(0, 19);
+    const hostname = os.hostname() || 'local';
+
+    return template
+      .replace('{{datetime}}', datetime)
+      .replace('{{num_files}}', String(filesCount))
+      .replace('{{hostname}}', hostname);
+  }
+
+  async runSyncPipeline(customMsg?: string): Promise<void> {
+    this.updateStatusBar('syncing');
+
+    try {
+      const hasModified = await this.gitManager.hasChanges();
+      const unpushed = await this.gitManager.hasUnpushedCommits(this.settings.remoteName, this.settings.branchName);
+
+      if (!hasModified && !unpushed) {
+        console.log('Git Blaster: Vault up-to-date. Sync aborted.');
+        this.updateStatusBar('synced');
+        return;
+      }
+
+      if (this.settings.pullBeforeSync) {
+        console.log('Git Blaster: Pulling changes...');
+        const pullResult = await this.gitManager.pull(this.settings.remoteName, this.settings.branchName);
+        
+        if (!pullResult.success) {
+          if (pullResult.conflict) {
+            new Notice('Git Blaster: Merge conflict detected! Resolving aborted. Please fix manually.');
+            this.updateStatusBar('conflict');
+            return;
+          }
+          console.warn('Git Blaster: Pull failed', pullResult.error);
+        }
+      }
+
+      if (hasModified) {
+        console.log('Git Blaster: Committing changes...');
+        const numFiles = await this.gitManager.getModifiedFilesCount();
+        const commitMsg = customMsg || this.formatCommitMessage(this.settings.commitMessageTemplate, numFiles);
+        await this.gitManager.commit(commitMsg);
+      }
+
+      console.log('Git Blaster: Pushing changes...');
+      const pushResult = await this.gitManager.push(this.settings.remoteName, this.settings.branchName);
+
+      if (pushResult.success) {
+        new Notice('Git Blaster: Synchronization Complete!');
+        this.updateStatusBar('synced');
+      } else {
+        if (pushResult.offline) {
+          new Notice('Git Blaster: Offline. Changes committed locally; sync pending connection.');
+          this.updateStatusBar('offline');
+        } else {
+          new Notice(`Git Blaster Error pushing: ${pushResult.error}`);
+          this.updateStatusBar('offline');
+        }
+      }
+    } catch (err: any) {
+      console.error('Git Blaster sync failed unexpectedly', err);
+      new Notice('Git Blaster encountered an error. Check developer logs.');
+      this.updateStatusBar('idle');
+    }
+  }
+
+  private runFinalShutdownSync() {
+    const adapter = this.app.vault.adapter as any;
+    const vaultPath = adapter.basePath;
+    const { execSync } = require('child_process');
+
+    try {
+      const checkStatus = execSync('git status --porcelain', { cwd: vaultPath }).toString();
+      if (checkStatus.trim().length > 0) {
+        execSync('git add .', { cwd: vaultPath });
+        const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        execSync(`git commit -m "Vault backup on close: ${nowStr}"`, { cwd: vaultPath });
+        execSync(`git push ${this.settings.remoteName} ${this.settings.branchName}`, { cwd: vaultPath });
+        console.log('Git Blaster: Sync on exit completed.');
+      }
+    } catch (e) {
+      console.warn('Git Blaster: Exit sync timed out or failed.', e);
+    }
+  }
+}
