@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 
 export class GitManager {
   private vaultPath: string;
@@ -7,9 +7,9 @@ export class GitManager {
     this.vaultPath = vaultPath;
   }
 
-  private execCommand(cmd: string): Promise<string> {
+  private execCommand(args: string[]): Promise<string> {
     return new Promise((resolve, reject) => {
-      exec(cmd, { cwd: this.vaultPath }, (error, stdout, stderr) => {
+      execFile('git', args, { cwd: this.vaultPath }, (error, stdout, stderr) => {
         if (error) {
           reject({ error, stdout, stderr });
         } else {
@@ -21,7 +21,7 @@ export class GitManager {
 
   async hasChanges(): Promise<boolean> {
     try {
-      const out = await this.execCommand('git status --porcelain');
+      const out = await this.execCommand(['status', '--porcelain']);
       return out.length > 0;
     } catch (err) {
       console.error('Git Blaster: Error checking status', err);
@@ -31,7 +31,7 @@ export class GitManager {
 
   async getModifiedFilesCount(): Promise<number> {
     try {
-      const out = await this.execCommand('git status --porcelain');
+      const out = await this.execCommand(['status', '--porcelain']);
       if (!out) return 0;
       return out.split('\n').filter(line => line.trim().length > 0).length;
     } catch {
@@ -41,7 +41,7 @@ export class GitManager {
 
   async hasUnpushedCommits(remote: string, branch: string): Promise<boolean> {
     try {
-      const out = await this.execCommand(`git log ${remote}/${branch}..HEAD --oneline`);
+      const out = await this.execCommand(['log', `${remote}/${branch}..HEAD`, '--oneline']);
       return out.trim().length > 0;
     } catch (err) {
       // If the tracking branch doesn't exist yet, we assume we have unpushed commits
@@ -51,7 +51,7 @@ export class GitManager {
 
   async pull(remote: string, branch: string): Promise<{ success: boolean; conflict: boolean; error?: string }> {
     try {
-      await this.execCommand(`git pull --rebase ${remote} ${branch}`);
+      await this.execCommand(['pull', '--rebase', remote, branch]);
       return { success: true, conflict: false };
     } catch (err: any) {
       const stderr = err.stderr || '';
@@ -68,14 +68,13 @@ export class GitManager {
   }
 
   async commit(msg: string): Promise<void> {
-    await this.execCommand('git add .');
-    const escapedMsg = msg.replace(/"/g, '\\"');
-    await this.execCommand(`git commit -m "${escapedMsg}"`);
+    await this.execCommand(['add', '.']);
+    await this.execCommand(['commit', '-m', msg]);
   }
 
   async push(remote: string, branch: string): Promise<{ success: boolean; offline: boolean; error?: string }> {
     try {
-      await this.execCommand(`git push ${remote} ${branch}`);
+      await this.execCommand(['push', remote, branch]);
       return { success: true, offline: false };
     } catch (err: any) {
       const stderr = err.stderr || '';
@@ -97,7 +96,7 @@ export class GitManager {
 
   async abortRebase(): Promise<void> {
     try {
-      await this.execCommand('git rebase --abort');
+      await this.execCommand(['rebase', '--abort']);
     } catch (e) {
       console.warn('Git Blaster: Failed to abort rebase', e);
     }
