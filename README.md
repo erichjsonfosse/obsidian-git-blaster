@@ -29,7 +29,7 @@ To use Git Blaster, ensure your environment meets the following requirements:
 
 ## 📦 Installation
 
-### Method 1: Via GitHub Releases (Recommended)
+### Method 1: Via GitHub Releases
 
 1. Go to the **[Releases](https://github.com/erichjsonfosse/obsidian-git-blaster/releases)** page on GitHub and download the latest release assets:
    * `main.js`

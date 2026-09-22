@@ -47,7 +47,7 @@ export default class GitBlasterPlugin extends Plugin {
     this.scheduler.startIntervalTimer();
     this.scheduler.registerOnlineListener();
 
-    this.addRibbonIcon('git-compare_arrows', 'Git Blaster: Sync now', () => {
+    this.addRibbonIcon('git-compare-arrows', 'Git Blaster: Sync now', () => {
       new Notice('Git Blaster: Manual Sync Initiated');
       this.runSyncPipeline();
     });
