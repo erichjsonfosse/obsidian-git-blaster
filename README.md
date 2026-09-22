@@ -29,20 +29,53 @@ To use Git Blaster, ensure your environment meets the following requirements:
 
 ## 📦 Installation
 
-### Manual Installation (From Source)
+### Method 1: Via GitHub Releases (Recommended)
 
-1.  Navigate to your Obsidian vault's plugin directory:
-    ```bash
-    cd /path/to/your/vault/.obsidian/plugins
-    ```
-2.  Create a directory for the plugin:
-    ```bash
-    mkdir -p obsidian-git-blaster
-    ```
-3.  Copy the compiled files `main.js` and `manifest.json` from the `dist/` directory of this repository into the newly created folder:
-    *   `dist/main.js` ➡️ `.obsidian/plugins/obsidian-git-blaster/main.js`
-    *   `dist/manifest.json` ➡️ `.obsidian/plugins/obsidian-git-blaster/manifest.json`
-4.  Open Obsidian, go to **Settings > Community Plugins**, reload plugins, and enable **Git Blaster**.
+1. Go to the **[Releases](https://github.com/erichjsonfosse/obsidian-git-blaster/releases)** page on GitHub and download the latest release assets:
+   * `main.js`
+   * `manifest.json`
+2. Open your vault's folder and navigate to `.obsidian/plugins/` (create the `plugins` folder if it doesn't exist).
+3. Create a folder named `obsidian-git-blaster` and place `main.js` and `manifest.json` inside it:
+   ```text
+   your-vault/
+   └── .obsidian/
+       └── plugins/
+           └── obsidian-git-blaster/
+               ├── main.js
+               └── manifest.json
+   ```
+4. In Obsidian, go to **Settings > Community Plugins**, click **Reload plugins**, and toggle on **Git Blaster**.
+
+---
+
+### Method 2: Via BRAT (Auto-Updates directly from GitHub)
+
+If you use the **[BRAT plugin](https://github.com/TfTHacker/obsidian-42-brat)** (Beta Reviewers Auto-update Tool) in Obsidian:
+
+1. Install and enable **BRAT** from Obsidian's Community Plugins.
+2. Open **Settings > BRAT > Add Beta Plugin**.
+3. Enter the GitHub repository path: `erichjsonfosse/obsidian-git-blaster`.
+4. Click **Add Plugin**. BRAT will download `main.js` and `manifest.json` directly from the latest GitHub release and keep it auto-updated!
+
+---
+
+### Method 3: Clone & Build from GitHub (For Developers)
+
+1. Navigate to your vault's plugins folder in terminal:
+   ```bash
+   cd /path/to/your/vault/.obsidian/plugins
+   ```
+2. Clone the repository directly from GitHub:
+   ```bash
+   git clone https://github.com/erichjsonfosse/obsidian-git-blaster.git
+   cd obsidian-git-blaster
+   ```
+3. Install dependencies and build the plugin:
+   ```bash
+   npm install
+   npm run build
+   ```
+4. Reload Community Plugins in Obsidian and enable **Git Blaster**.
 
 ---
 
