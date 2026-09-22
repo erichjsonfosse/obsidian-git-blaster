@@ -22,7 +22,6 @@ export default class GitBlasterPlugin extends Plugin {
 
     (this as any).gitManager = new GitManager(vaultPath);
     (this as any).scheduler = new GitScheduler(
-      this.gitManager,
       this.settings,
       (msg) => this.runSyncPipeline(msg)
     );

@@ -1,13 +1,13 @@
 # Git Blaster for Obsidian
 
-**Git Blaster** is a blazing-fast, lightweight, and zero-dependency Obsidian plugin that automatically syncs and backs up your vault to any remote Git repository. It provides high-performance automation, smart redundancy checking, and robust conflict protection—ensuring your second brain is always safe, versioned, and perfectly in sync across all your devices.
+**Git Blaster** is a lightweight Obsidian plugin that automatically syncs and backs up your vault to any remote Git repository. It provides redundancy checking, and conflict protection.
 
 ---
 
 ## 🚀 Key Features
 
 *   **Interval-Based Syncing**: Automate synchronization at customizable, regular intervals (e.g., every 5 minutes).
-*   **File Watcher Syncing**: Trigger sync automatically when vault files are created, modified, renamed, or deleted, utilizing an adjustable debounce mechanism (defaulting to 5 seconds) to avoid redundant git operations during active writing sessions.
+*   **File Watcher Syncing**: Trigger sync automatically when vault files are created, modified, renamed, or deleted, utilizing an adjustable debounce mechanism (defaulting to 5 seconds).
 *   **Smart Git Pull**: Automatically runs `git pull --rebase` before pushing to keep local commits clean and linear, preventing divergent history.
 *   **Merge Conflict Protection**: If a merge conflict occurs during sync, Git Blaster automatically aborts the rebase operation, reverts to the safe pre-pull state, notifies you, and marks the status as in conflict so no data is corrupted or lost.
 *   **Catchup Syncs**: Triggers a synchronization automatically as soon as network connection is restored (listening to online/offline state changes).

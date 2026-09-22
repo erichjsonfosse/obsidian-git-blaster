@@ -1,15 +1,7 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { GitScheduler } from '../src/git-scheduler';
-import { GitManager } from '../src/git-manager';
 import { GitBlasterSettings } from '../src/interfaces/git-blaster-settings';
-
-// A mock GitManager for testing
-class MockGitManager extends GitManager {
-  constructor() {
-    super('');
-  }
-}
 
 describe('GitScheduler', () => {
   const settings: GitBlasterSettings = {
@@ -22,11 +14,9 @@ describe('GitScheduler', () => {
     branchName: 'main',
   };
 
-  const mockGitManager = new MockGitManager();
-
   it('triggers sync via interval timer', async () => {
     let triggerCount = 0;
-    const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'interval' }, async () => {
+    const scheduler = new GitScheduler({ ...settings, triggerMode: 'interval' }, async () => {
       triggerCount++;
     });
 
@@ -49,7 +39,7 @@ describe('GitScheduler', () => {
 
   it('debounces file change events', async () => {
     let triggerCount = 0;
-    const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'file-change' }, async () => {
+    const scheduler = new GitScheduler({ ...settings, triggerMode: 'file-change' }, async () => {
       triggerCount++;
     });
 
@@ -71,7 +61,7 @@ describe('GitScheduler', () => {
 
   it('restarts or disables triggers when settings are dynamically updated', async () => {
     let triggerCount = 0;
-    const scheduler = new GitScheduler(mockGitManager, { ...settings, triggerMode: 'interval' }, async () => {
+    const scheduler = new GitScheduler({ ...settings, triggerMode: 'interval' }, async () => {
       triggerCount++;
     });
 

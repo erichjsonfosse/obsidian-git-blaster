@@ -1,8 +1,6 @@
-import { GitManager } from './git-manager';
 import { GitBlasterSettings } from './interfaces/git-blaster-settings';
 
 export class GitScheduler {
-  private readonly gitManager: GitManager;
   private settings: GitBlasterSettings;
   private readonly onSyncTrigger: (customMessage?: string) => Promise<void>;
 
@@ -11,11 +9,9 @@ export class GitScheduler {
   private onlineListener: (() => void) | null = null;
 
   constructor(
-    gitManager: GitManager,
     settings: GitBlasterSettings,
     onSyncTrigger: (customMessage?: string) => Promise<void>
   ) {
-    this.gitManager = gitManager;
     this.settings = settings;
     this.onSyncTrigger = onSyncTrigger;
   }
