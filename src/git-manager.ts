@@ -49,16 +49,27 @@ export class GitManager {
     }
   }
 
-  async pull(remote: string, branch: string): Promise<{ success: boolean; conflict: boolean; error?: string }> {
+  async pull(
+    remote: string,
+    branch: string,
+    strategy: 'rebase' | 'merge' | 'ff-only' = 'rebase'
+  ): Promise<{ success: boolean; conflict: boolean; error?: string }> {
     try {
-      await this.execCommand(['pull', '--rebase', remote, branch]);
+      let pullFlag = '--rebase';
+      if (strategy === 'merge') pullFlag = '--no-rebase';
+      if (strategy === 'ff-only') pullFlag = '--ff-only';
+
+      await this.execCommand(['pull', pullFlag, remote, branch]);
       return { success: true, conflict: false };
     } catch (err: any) {
       const stderr = err.stderr || '';
       const stdout = err.stdout || '';
       const combined = stderr + ' ' + stdout;
       
-      const isConflict = combined.includes('CONFLICT') || combined.includes('Merge conflict') || combined.includes('rebase in progress');
+      const isConflict = combined.includes('CONFLICT') ||
+                         combined.includes('Merge conflict') ||
+                         combined.includes('rebase in progress') ||
+                         combined.includes('Not possible to fast-forward');
       return {
         success: false,
         conflict: isConflict,
@@ -99,6 +110,14 @@ export class GitManager {
       await this.execCommand(['rebase', '--abort']);
     } catch (e) {
       console.warn('Git Blaster: Failed to abort rebase', e);
+    }
+  }
+
+  async abortMerge(): Promise<void> {
+    try {
+      await this.execCommand(['merge', '--abort']);
+    } catch (e) {
+      console.warn('Git Blaster: Failed to abort merge', e);
     }
   }
 }

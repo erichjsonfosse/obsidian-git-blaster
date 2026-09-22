@@ -51,4 +51,10 @@ describe('GitManager', () => {
     const logOutput = execSync('git log -n 1 --oneline', { cwd: testDir }).toString();
     assert.match(logOutput, /Initial note commit/);
   });
+
+  it('runs abortMerge cleanly without throwing errors when no merge is active', async () => {
+    await assert.doesNotReject(async () => {
+      await git.abortMerge();
+    });
+  });
 });

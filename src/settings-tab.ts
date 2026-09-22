@@ -79,6 +79,22 @@ export class GitBlasterSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName('Pull Strategy')
+      .setDesc('Strategy used when pulling remote changes.')
+      .addDropdown(dropdown => {
+        dropdown
+          .addOption('rebase', 'Rebase (Recommended - Linear history)')
+          .addOption('merge', 'Merge (Creates merge commits)')
+          .addOption('ff-only', 'Fast-Forward Only (Fails if divergent)')
+          .setValue(this.plugin.settings.pullStrategy || 'rebase')
+          .onChange(async (val: 'rebase' | 'merge' | 'ff-only') => {
+            this.plugin.settings.pullStrategy = val;
+            await this.plugin.saveSettings();
+            this.plugin.scheduler.updateSettings(this.plugin.settings);
+          });
+      });
+
+    new Setting(containerEl)
       .setName('Commit Message Template')
       .setDesc('Format for auto-backups. Supported placeholders: {{datetime}}, {{num_files}}, {{hostname}}')
       .addText(cb => {

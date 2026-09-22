@@ -138,12 +138,20 @@ export default class GitBlasterPlugin extends Plugin {
 
       if (this.settings.pullBeforeSync) {
         console.log('Git Blaster: Pulling changes...');
-        const pullResult = await this.gitManager.pull(this.settings.remoteName, this.settings.branchName);
+        const pullResult = await this.gitManager.pull(
+          this.settings.remoteName,
+          this.settings.branchName,
+          this.settings.pullStrategy
+        );
         
         if (!pullResult.success) {
           if (pullResult.conflict) {
-            new Notice('Git Blaster: Merge conflict detected! Aborting rebase. Please fix manually.');
-            await this.gitManager.abortRebase();
+            new Notice('Git Blaster: Conflict detected during pull! Aborting sync operation.');
+            if (this.settings.pullStrategy === 'merge') {
+              await this.gitManager.abortMerge();
+            } else {
+              await this.gitManager.abortRebase();
+            }
             this.updateStatusBar('conflict');
             return;
           }

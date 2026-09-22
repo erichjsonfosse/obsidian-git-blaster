@@ -8,7 +8,7 @@
 
 *   **Interval-Based Syncing**: Automate synchronization at customizable, regular intervals (e.g., every 5 minutes).
 *   **File Watcher Syncing**: Trigger sync automatically when vault files are created, modified, renamed, or deleted, utilizing an adjustable debounce mechanism (defaulting to 5 seconds).
-*   **Smart Git Pull**: Automatically runs `git pull --rebase` before pushing to keep local commits clean and linear, preventing divergent history.
+*   **Configurable Pull Strategy**: Choose between `Rebase` (default, for linear history without merge commit spam), `Merge` (standard merge commits), or `Fast-Forward Only` (fails if history has diverged).
 *   **Merge Conflict Protection**: If a merge conflict occurs during sync, Git Blaster automatically aborts the rebase operation, reverts to the safe pre-pull state, notifies you, and marks the status as in conflict so no data is corrupted or lost.
 *   **Catchup Syncs**: Triggers a synchronization automatically as soon as network connection is restored (listening to online/offline state changes).
 *   **Graceful Shutdown Sync**: Guarantees your vault is fully committed and pushed on plugin unload or Obsidian shutdown/restart via synchronous final backup.
@@ -23,15 +23,13 @@
 
 To use Git Blaster, ensure your environment meets the following requirements:
 1.  **System Git**: Git must be installed on your machine and available in your shell path (verify with `git --version` in terminal).
-2.  **SSH / Credentials Helper**: Since the plugin does not store sensitive credentials, configure your local environment to handle authentication seamlessly. Use an active local SSH agent (`ssh-add`) or an HTTPS credential helper (e.g., Git Credential Manager).
+2.  **SSH / Credentials Helper**: Since the plugin does not store sensitive credentials, configure your local environment to handle authentication seamlessly. Use an active local SSH agent (`ssh-add`) or an HTTPS credential helper (e.g., Git Credential Manager). Alternatively, you can install ssh-askpass, and git will use that and ask for password whenever it's needed.
 
 ---
 
 ## 📦 Installation
 
 ### Manual Installation (From Source)
-
-Because Git Blaster is highly optimized, the code is compiled into a single file bundle. Follow these steps to manually install:
 
 1.  Navigate to your Obsidian vault's plugin directory:
     ```bash
@@ -81,7 +79,7 @@ cd obsidian-git-blaster
 
 ### 2. Install Dependencies
 ```bash
-npm install
+npm i
 ```
 
 ### 3. Build & Watch

@@ -9,6 +9,7 @@ describe('GitScheduler', () => {
     intervalSeconds: 0.05, // 50ms for fast testing
     debounceSeconds: 0.05, // 50ms for fast testing
     pullBeforeSync: true,
+    pullStrategy: 'rebase',
     commitMessageTemplate: 'test',
     remoteName: 'origin',
     branchName: 'main',

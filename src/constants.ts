@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS: GitBlasterSettings = {
   intervalSeconds: 300,
   debounceSeconds: 5,
   pullBeforeSync: true,
+  pullStrategy: 'rebase',
   commitMessageTemplate: 'Vault backup: {{datetime}} - {{num_files}} files changed',
   remoteName: 'origin',
   branchName: 'main',
