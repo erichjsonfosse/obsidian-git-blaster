@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .obsidian/
+.superpowers/
 .idea/
 .vscode/
 *.log
