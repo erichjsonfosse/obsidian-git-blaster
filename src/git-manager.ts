@@ -53,14 +53,14 @@ export class GitManager {
     remote: string,
     branch: string,
     strategy: 'rebase' | 'merge' | 'ff-only' = 'rebase'
-  ): Promise<{ success: boolean; conflict: boolean; error?: string }> {
+  ): Promise<{ success: boolean; conflict: boolean; offline: boolean; error?: string }> {
     try {
       let pullFlag = '--rebase';
       if (strategy === 'merge') pullFlag = '--no-rebase';
       if (strategy === 'ff-only') pullFlag = '--ff-only';
 
       await this.execCommand(['pull', pullFlag, remote, branch]);
-      return { success: true, conflict: false };
+      return { success: true, conflict: false, offline: false };
     } catch (err: any) {
       const stderr = err.stderr || '';
       const stdout = err.stdout || '';
@@ -70,9 +70,16 @@ export class GitManager {
                          combined.includes('Merge conflict') ||
                          combined.includes('rebase in progress') ||
                          combined.includes('Not possible to fast-forward');
+
+      const isOffline = combined.includes('Could not resolve host') || 
+                        combined.includes('Connection timed out') || 
+                        combined.includes('network is unreachable') ||
+                        combined.includes('Could not read from remote repository');
+
       return {
         success: false,
         conflict: isConflict,
+        offline: isOffline,
         error: stderr || err.error?.message || 'Unknown pull error'
       };
     }

@@ -57,4 +57,12 @@ describe('GitManager', () => {
       await git.abortMerge();
     });
   });
+
+  it('identifies offline errors when pulling from unreachable remote', async () => {
+    execSync('git remote add origin https://unreachable.invalid/repo.git', { cwd: testDir });
+    const result = await git.pull('origin', 'main');
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.conflict, false);
+    assert.strictEqual(result.offline, true);
+  });
 });
