@@ -128,14 +128,6 @@ export default class GitBlasterPlugin extends Plugin {
         await this.gitManager.commit(commitMsg);
       }
 
-      const unpushed = await this.gitManager.hasUnpushedCommits(this.settings.remoteName, this.settings.branchName);
-
-      if (!unpushed) {
-        console.log('Git Blaster: Vault up-to-date. Sync aborted.');
-        this.updateStatusBar('synced');
-        return;
-      }
-
       if (this.settings.pullBeforeSync) {
         console.log('Git Blaster: Pulling changes...');
         const pullResult = await this.gitManager.pull(
@@ -155,8 +147,22 @@ export default class GitBlasterPlugin extends Plugin {
             this.updateStatusBar('conflict');
             return;
           }
+          if (pullResult.offline) {
+            new Notice('Git Blaster: Offline. Cannot pull remote changes.');
+            this.updateStatusBar('offline');
+            return;
+          }
           console.warn('Git Blaster: Pull failed', pullResult.error);
         }
+      }
+
+      const unpushed = await this.gitManager.hasUnpushedCommits(this.settings.remoteName, this.settings.branchName);
+
+      if (!unpushed) {
+        console.log('Git Blaster: Vault up-to-date. Sync complete.');
+        new Notice('Git Blaster: Synchronization Complete!');
+        this.updateStatusBar('synced');
+        return;
       }
 
       console.log('Git Blaster: Pushing changes...');
